@@ -1,4 +1,4 @@
-<form [formGroup]="searchForm" (submit)="searchBooks()">
+<form [formGroup]="searchForm" (ngSubmit)="searchBooks()">
   <mat-form-field floatLabel="never">
     <input
       autoFocus
@@ -7,7 +7,7 @@
       placeholder="Search for books to add to your reading list"
       formControlName="term"
     />
-    <button mat-icon-button matSuffix>
+    <button  type="submit" aria-label="Click here to search"  mat-icon-button matSuffix>
       <mat-icon>search</mat-icon>
     </button>
   </mat-form-field>
@@ -15,13 +15,13 @@
 
 <ng-container *ngIf="searchTerm; else empty">
   <div class="book-grid">
-    <div class="book" data-testing="book-item" *ngFor="let b of books">
+    <div class="book" role="button" data-testing="book-item" *ngFor="let b of books$ | async" >
       <div class="book--title">
         {{ b.title }}
       </div>
       <div class="book--content">
         <div class="book--content--cover">
-          <img src="{{ b.coverUrl }}" />
+          <img [attr.aria-label]="b.title" src="{{ b.coverUrl }}" />
         </div>
         <div class="book--content--info">
           <div><strong>Author:</strong> {{ b.authors.join(',') }}</div>
@@ -36,6 +36,7 @@
               color="primary"
               (click)="addBookToReadingList(b)"
               [disabled]="b.isAdded"
+              aria-label="Want to Read"
             >
               Want to Read
             </button>
