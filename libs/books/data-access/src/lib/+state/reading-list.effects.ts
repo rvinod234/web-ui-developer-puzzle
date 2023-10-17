@@ -5,6 +5,7 @@ import { of } from 'rxjs';
 import { catchError, concatMap, exhaustMap, map } from 'rxjs/operators';
 import { ReadingListItem } from '@tmo/shared/models';
 import * as ReadingListActions from './reading-list.actions';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Injectable()
 export class ReadingListEffects implements OnInitEffects {
@@ -54,9 +55,54 @@ export class ReadingListEffects implements OnInitEffects {
     )
   );
 
-  ngrxOnInitEffects() {
-    return ReadingListActions.init();
-  }
 
-  constructor(private actions$: Actions, private http: HttpClient) {}
+
+  undoAddtoReadingListBook$ = createEffect(() =>
+  this.actions$.pipe(
+    ofType(ReadingListActions.undoAddtoReadingList),
+    concatMap(({ book }) => {
+      return this.snackBarAction(book.title + ' is added to Reading List.','Undo')
+        .onAction()
+        .pipe(
+          map(() =>
+            ReadingListActions.removeFromReadingList({
+              item: { ...book, bookId: book.id },
+            })
+          )
+        );
+    })
+  )
+);
+
+undoRemoveReadingListBook$ = createEffect(() =>
+this.actions$.pipe(
+  ofType(ReadingListActions.undoRemoveFromReadingList),
+  concatMap(({ item }) => {
+    return this.snackBarAction(item.title + ' is removed from Reading List.','Undo')
+      .onAction()
+      .pipe(
+        map(() =>
+          ReadingListActions.addToReadingList({
+            book: { ...item, id: item.bookId },
+          })
+        )
+      );
+  })
+)
+);
+
+snackBarAction(message: string, action: string) {
+  return this.matSnackBar.open(message, action, {
+    duration: 6000,
+  });
+}
+
+ngrxOnInitEffects() {
+  return ReadingListActions.init();
+}
+
+constructor(private actions$: Actions, private http: HttpClient, private matSnackBar: MatSnackBar) {}
+
+
+
 }
